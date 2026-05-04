@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday!</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;600&family=Pacifico&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+    <div id="gift-screen">
+        <div class="gift-container" id="btn-open">
+            <div class="gift-box">
+                <div class="lid"></div>
+                <div class="box"></div>
+                <div class="ribbon-v"></div>
+                <div class="ribbon-h"></div>
+                <div class="bow">
+                    <div class="bow-left"></div>
+                    <div class="bow-right"></div>
+                </div>
+            </div>
+            <p class="tap-text">Tap to Unbox Your Gift</p>
+        </div>
+    </div>
+
+    <div id="birthday-screen" class="hidden">
+        <div class="card">
+            <h1 class="title">Happy Birthday</h1>
+            
+            <div class="cake-container">
+                <div class="candle">
+                    <div class="flame"></div>
+                </div>
+                <div class="cake-top"></div>
+                <div class="cake-bottom"></div>
+            </div>
+
+            <div class="message">
+                <p>May your day be as beautiful as you are.</p>
+                <div class="sparkles">✨ ✨ ✨</div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="myAudio" loop playsinline>
+        <source src="song.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
