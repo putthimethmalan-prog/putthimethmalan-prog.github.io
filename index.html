@@ -1,54 +1,71 @@
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Happy Birthday!</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;600&family=Pacifico&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <title>Chat</title>
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+  <style>
+    body { font-family: Arial; background: #0f172a; color: white; }
+    #chat { height: 300px; overflow-y: scroll; border: 1px solid #333; padding: 10px; }
+    input { padding: 10px; margin: 5px; }
+    button { padding: 10px; }
+    img, video { max-width: 150px; border-radius: 10px; }
+  </style>
 </head>
 <body>
 
-    <div id="gift-screen">
-        <div class="gift-container" id="btn-open">
-            <div class="gift-box">
-                <div class="lid"></div>
-                <div class="box"></div>
-                <div class="ribbon-v"></div>
-                <div class="ribbon-h"></div>
-                <div class="bow">
-                    <div class="bow-left"></div>
-                    <div class="bow-right"></div>
-                </div>
-            </div>
-            <p class="tap-text">Tap to Unbox Your Gift</p>
-        </div>
-    </div>
+<h2>💬 Chat</h2>
 
-    <div id="birthday-screen" class="hidden">
-        <div class="card">
-            <h1 class="title">Happy Birthday</h1>
-            
-            <div class="cake-container">
-                <div class="candle">
-                    <div class="flame"></div>
-                </div>
-                <div class="cake-top"></div>
-                <div class="cake-bottom"></div>
-            </div>
+<div id="chat"></div>
 
-            <div class="message">
-                <p>May your day be as beautiful as you are.</p>
-                <div class="sparkles">✨ ✨ ✨</div>
-            </div>
-        </div>
-    </div>
+<input id="msg" placeholder="พิมพ์ข้อความ...">
+<input type="file" id="file">
+<button onclick="send()">ส่ง</button>
 
-    <audio id="myAudio" loop playsinline>
-        <source src="song.mp3" type="audio/mpeg">
-    </audio>
+<script>
+const socket = io("http://localhost:3000");
 
-    <script src="script.js"></script>
+function send() {
+  const text = document.getElementById("msg").value;
+  const fileInput = document.getElementById("file");
+
+  if (fileInput.files[0]) {
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    fetch("http://localhost:3000/upload", {
+      method: "POST",
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      socket.emit("sendMessage", {
+        sender: "me",
+        text,
+        file: data.file
+      });
+    });
+
+  } else {
+    socket.emit("sendMessage", { sender: "me", text });
+  }
+}
+
+socket.on("newMessage", (msg) => {
+  const chat = document.getElementById("chat");
+
+  let html = `<p><b>${msg.sender}:</b> ${msg.text}</p>`;
+
+  if (msg.file) {
+    if (msg.file.match(/mp4/)) {
+      html += `<video src="http://localhost:3000/uploads/${msg.file}" controls></video>`;
+    } else {
+      html += `<img src="http://localhost:3000/uploads/${msg.file}">`;
+    }
+  }
+
+  chat.innerHTML += html;
+});
+</script>
+
 </body>
 </html>
