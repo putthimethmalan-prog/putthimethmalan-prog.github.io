@@ -1,43 +1,65 @@
-const btnOpen = document.getElementById('btn-open');
-const giftScreen = document.getElementById('gift-screen');
-const birthdayScreen = document.getElementById('birthday-screen');
-const audio = document.getElementById('myAudio');
+const express = require("express");
+const http = require("http");
+const mongoose = require("mongoose");
+const socket = require("socket.io");
+const multer = require("multer");
+const cors = require("cors");
 
-// พยายามเล่นเพลงทันทีที่โหลด
-function attemptPlay() {
-    audio.play().catch(() => {
-        console.log("Autoplay blocked. Waiting for first click.");
-    });
-}
+const app = express();
+const server = http.createServer(app);
+const io = socket(server, { cors: { origin: "*" } });
 
-window.addEventListener('load', attemptPlay);
-window.addEventListener('touchstart', attemptPlay, { once: true });
-window.addEventListener('mousedown', attemptPlay, { once: true });
+app.use(express.json());
+app.use(cors());
+app.use("/uploads", express.static("uploads"));
 
-btnOpen.addEventListener('click', () => {
-    audio.play(); // บังคับเล่นเพลง
+// MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/chat");
 
-    // พลุกระดาษแบบกระจายสวยๆ
-    const count = 200;
-    const defaults = { origin: { y: 0.7 } };
-
-    function fire(particleRatio, opts) {
-        confetti(Object.assign({}, defaults, opts, {
-            particleCount: Math.floor(count * particleRatio)
-        }));
-    }
-
-    fire(0.25, { spread: 26, startVelocity: 55 });
-    fire(0.2, { spread: 60 });
-    fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-
-    // เปลี่ยนหน้าแบบสมูท
-    giftScreen.style.opacity = '0';
-    setTimeout(() => {
-        giftScreen.classList.add('hidden');
-        birthdayScreen.classList.remove('hidden');
-        setTimeout(() => {
-            birthdayScreen.classList.add('show');
-        }, 50);
-    }, 800);
+// Schema
+const User = mongoose.model("User", {
+  username: String,
+  password: String,
 });
+
+const Message = mongoose.model("Message", {
+  sender: String,
+  text: String,
+  file: String,
+});
+
+// สมัคร
+app.post("/register", async (req, res) => {
+  const user = new User(req.body);
+  await user.save();
+  res.send("ok");
+});
+
+// ล็อกอิน
+app.post("/login", async (req, res) => {
+  const user = await User.findOne(req.body);
+  if (user) res.send({ success: true });
+  else res.send({ success: false });
+});
+
+// อัปโหลดไฟล์
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => cb(null, Date.now() + file.originalname),
+});
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  res.send({ file: req.file.filename });
+});
+
+// socket
+io.on("connection", (socket) => {
+  socket.on("sendMessage", async (data) => {
+    const msg = new Message(data);
+    await msg.save();
+    io.emit("newMessage", msg);
+  });
+});
+
+server.listen(3000, () => console.log("Server running"));
